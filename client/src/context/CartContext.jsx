@@ -7,6 +7,8 @@ export const CartProvider = ({ children }) => {
         const saved = localStorage.getItem('cart');
         return saved ? JSON.parse(saved) : [];
     });
+    
+    const [isCartOpen, setIsCartOpen] = useState(false);
 
     useEffect(() => {
         localStorage.setItem('cart', JSON.stringify(cart));
@@ -48,6 +50,7 @@ export const CartProvider = ({ children }) => {
                 current_price: calculateDynamicPrice(product, quantity) 
             }];
         });
+        setIsCartOpen(true);
     };
 
     const updateQuantity = (id, quantity) => {
@@ -77,7 +80,8 @@ export const CartProvider = ({ children }) => {
 
     return (
         <CartContext.Provider value={{
-            cart, addToCart, updateQuantity, removeFromCart, clearCart, getCartTotal, getSavings
+            cart, addToCart, updateQuantity, removeFromCart, clearCart, getCartTotal, getSavings,
+            isCartOpen, setIsCartOpen
         }}>
             {children}
         </CartContext.Provider>
