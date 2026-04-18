@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-lightBg text-darkText transition-colors duration-300 antialiased;
+  }
+  
+  .dark body {
+    @apply bg-darkPrimary text-lightText;
+  }
+  
+  /* Arabic RTL Support */
+  body[dir='rtl'] {
+    font-family: 'Cairo', 'Poppins', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-gold {
+    @apply px-6 py-3 rounded-2xl font-bold text-darkPrimary transition-all duration-300;
+    background: linear-gradient(135deg, #D4AF37, #F5D76E);
+  }
+  
+  .btn-gold:hover {
+    @apply scale-105;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  }
+
+  .card-luxury {
+    @apply bg-whiteCard rounded-2xl p-6 shadow-sm border border-gray-100 transition-all duration-300;
+  }
+
+  .dark .card-luxury {
+    @apply bg-darkSecondary border border-goldPrimary/20 shadow-none;
+  }
+  
+  .card-luxury:hover {
+    @apply shadow-xl border-goldPrimary;
+  }
+}
