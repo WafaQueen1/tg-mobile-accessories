@@ -17,13 +17,12 @@ const Navbar = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
+            setIsScrolled(window.scrollY > 20);
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    // Close mobile menu on route change
     useEffect(() => {
         setIsMenuOpen(false);
     }, [location]);
@@ -31,107 +30,126 @@ const Navbar = () => {
     const navLinks = [
         { name: t('home'), path: '/' },
         { name: t('shop'), path: '/shop' },
-        { name: t('aboutUs') || 'About', path: '/about' },
-        { name: t('contactUs') || 'Contact', path: '/contact' },
     ];
 
+    const ActionIcon = ({ icon: Icon, label, onClick, badge, colorClass = "" }) => (
+        <button 
+            onClick={onClick}
+            className={`flex flex-col items-center gap-1 group transition-all duration-300 p-2 rounded-xl hover:bg-goldPrimary/5 ${colorClass}`}
+        >
+            <div className="relative">
+                <Icon size={20} className="group-hover:text-goldPrimary transition-colors" />
+                {badge > 0 && (
+                    <span className="absolute -top-2 -right-2 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
+                        {badge}
+                    </span>
+                )}
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-tighter text-gray-400 group-hover:text-goldPrimary transition-colors">
+                {label}
+            </span>
+        </button>
+    );
+
     return (
-        <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-300 ${
+        <nav className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
             isScrolled 
-            ? 'py-3 bg-white/80 dark:bg-darkPrimary/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-800' 
+            ? 'py-2 bg-darkPrimary/90 backdrop-blur-xl border-b border-gray-800/50 shadow-2xl' 
             : 'py-6 bg-transparent'
         }`}>
             <div className="max-w-7xl mx-auto px-6 md:px-12 flex justify-between items-center">
                 {/* Logo */}
-                <Link to="/" className="flex items-center gap-3 group relative z-10 text-darkText dark:text-white">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#D4AF37] to-[#F5D76E] flex items-center justify-center text-darkPrimary font-bold text-xl transition-transform group-hover:scale-110">
+                <Link to="/" className="flex items-center gap-3 group relative z-10">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-[#F5D76E] flex items-center justify-center text-darkPrimary font-black text-xl shadow-[0_4px_15px_rgba(212,175,55,0.3)] transition-all group-hover:rotate-6 group-hover:scale-110">
                         TG
                     </div>
-                    <span className="font-bold text-xl tracking-tight hidden sm:block font-sans">
-                        Accessories
-                    </span>
+                    <div className="flex flex-col">
+                        <span className="font-black text-lg leading-tight tracking-tight text-white font-sans uppercase">
+                            Mobile
+                        </span>
+                        <span className="text-[10px] font-bold text-goldPrimary tracking-widest uppercase opacity-80">
+                            Accessories
+                        </span>
+                    </div>
                 </Link>
 
                 {/* Desktop Links */}
-                <div className="hidden md:flex gap-10 items-center">
+                <div className="hidden md:flex gap-12 items-center">
                     {navLinks.map((link) => (
                         <Link 
                             key={link.path} 
                             to={link.path} 
-                            className={`text-sm font-semibold uppercase tracking-widest transition-colors hover:text-goldPrimary ${
-                                location.pathname === link.path ? 'text-goldPrimary' : 'dark:text-gray-300 text-gray-700'
+                            className={`text-xs font-bold uppercase tracking-[0.2em] transition-all hover:text-goldPrimary relative group ${
+                                location.pathname === link.path ? 'text-goldPrimary' : 'text-gray-400'
                             }`}
                         >
                             {link.name}
+                            <span className={`absolute -bottom-2 left-0 h-[2px] bg-goldPrimary transition-all duration-300 ${
+                                location.pathname === link.path ? 'w-full' : 'w-0 group-hover:w-full'
+                            }`}></span>
                         </Link>
                     ))}
                     {isAdmin() && (
-                        <Link to="/tg-admin" className="text-xs font-bold bg-goldPrimary/10 text-goldPrimary px-3 py-1 rounded-full hover:bg-goldPrimary hover:text-darkPrimary transition">
-                            ADMIN
+                        <Link to="/tg-admin" className="text-[10px] font-black bg-goldPrimary/10 text-goldPrimary px-4 py-1.5 rounded-lg hover:bg-goldPrimary hover:text-darkPrimary transition-all border border-goldPrimary/20 tracking-widest">
+                            ADMIN PANEL
                         </Link>
                     )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 md:gap-4 relative z-10">
-                    {/* Language Switch */}
-                    <button 
-                        onClick={() => changeLanguage(currentLang === 'fr' ? 'en' : currentLang === 'en' ? 'ar' : 'fr')}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-darkSecondary transition text-gray-600 dark:text-gray-300"
-                        title="Change Language"
-                    >
-                        <FiGlobe size={18} />
-                    </button>
+                <div className="flex items-center gap-1 md:gap-4 relative z-10">
+                    <ActionIcon 
+                        icon={FiGlobe} 
+                        label={currentLang === 'ar' ? 'العربية' : 'Français'} 
+                        onClick={() => changeLanguage(currentLang === 'fr' ? 'ar' : 'fr')} 
+                    />
                     
-                    {/* Theme Toggle */}
-                    <button 
+                    <ActionIcon 
+                        icon={darkMode ? FiSun : FiMoon} 
+                        label={darkMode ? 'Clair' : 'Sombre'} 
                         onClick={toggleTheme}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-darkSecondary transition"
-                    >
-                        {darkMode ? <FiSun size={18} className="text-goldLight" /> : <FiMoon size={18} className="text-gray-800" />}
-                    </button>
+                        colorClass={darkMode ? 'text-goldLight' : ''}
+                    />
                     
-                    {/* Cart Trigger */}
-                    <button 
-                        onClick={() => setIsCartOpen(true)}
-                        className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-darkSecondary transition"
-                    >
-                        <FiShoppingCart size={20} className={cart.length > 0 ? 'text-goldPrimary' : 'text-gray-700 dark:text-gray-300'} />
-                        {cart.length > 0 && (
-                            <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">
-                                {cart.length}
-                            </span>
-                        )}
-                    </button>
+                    <ActionIcon 
+                        icon={FiShoppingCart} 
+                        label="Panier" 
+                        badge={cart.length}
+                        onClick={() => setIsCartOpen(true)} 
+                    />
 
-                    {/* User Profile / Mobile Menu Toggle */}
-                    <div className="flex items-center gap-2">
-                        {user ? (
-                            <button onClick={logout} className="hidden md:flex items-center gap-2 text-xs font-semibold hover:text-red-500 transition border-l border-gray-300 dark:border-gray-700 pl-4">
-                                <FiUser size={18} />
-                                {t('logout') || 'LOGOUT'}
-                            </button>
-                        ) : (
-                            <Link to="/login" className="hidden md:block p-2 text-gray-700 dark:text-gray-300 hover:text-goldPrimary transition">
-                                <FiUser size={20} />
-                            </Link>
-                        )}
-                        
-                        <button 
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                            className="md:hidden p-2 text-gray-700 dark:text-gray-300"
-                        >
-                            {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-                        </button>
-                    </div>
+                    <div className="h-8 w-px bg-gray-800 mx-2 hidden md:block"></div>
+
+                    {user ? (
+                        <ActionIcon 
+                            icon={FiUser} 
+                            label="Sortir" 
+                            onClick={logout}
+                            colorClass="text-red-400 hover:text-red-500 hover:bg-red-500/5"
+                        />
+                    ) : (
+                        <Link to="/login" className="flex flex-col items-center gap-1 group p-2 hover:bg-goldPrimary/5 rounded-xl transition-all">
+                            <FiUser size={20} className="text-gray-400 group-hover:text-goldPrimary transition-colors" />
+                            <span className="text-[10px] font-bold uppercase tracking-tighter text-gray-400 group-hover:text-goldPrimary transition-colors">
+                                Compte
+                            </span>
+                        </Link>
+                    )}
+                    
+                    <button 
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        className="md:hidden p-2 text-white ml-2 bg-gray-800/50 rounded-xl"
+                    >
+                        {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+                    </button>
                 </div>
                 
                 {/* Mobile Menu */}
                 {isMenuOpen && (
-                    <div className="fixed inset-0 bg-white dark:bg-darkPrimary z-[200] flex flex-col items-center justify-center space-y-8 md:hidden p-6 animate-slide-up">
+                    <div className="fixed inset-0 bg-darkPrimary z-[200] flex flex-col items-center justify-center space-y-12 md:hidden p-6 animate-slide-up">
                         <button 
                             onClick={() => setIsMenuOpen(false)}
-                            className="absolute top-8 right-8 text-gray-500"
+                            className="absolute top-8 right-8 text-gray-400 hover:text-white"
                         >
                             <FiX size={32} />
                         </button>
@@ -139,17 +157,11 @@ const Navbar = () => {
                             <Link 
                                 key={link.path} 
                                 to={link.path} 
-                                className="text-2xl font-bold dark:text-white uppercase tracking-widest hover:text-goldPrimary"
+                                className="text-3xl font-black text-white uppercase tracking-[0.2em] hover:text-goldPrimary transition-colors"
                             >
                                 {link.name}
                             </Link>
                         ))}
-                        {user && (
-                           <button onClick={logout} className="text-red-500 font-bold text-xl uppercase tracking-widest">{t('logout') || 'LOGOUT'}</button>
-                        )}
-                        {!user && (
-                            <Link to="/login" className="text-goldPrimary font-bold text-xl uppercase tracking-widest">{t('login') || 'LOGIN'}</Link>
-                        )}
                     </div>
                 )}
             </div>

@@ -15,6 +15,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.get('/stats', protect, admin, adminController.getDashboardStats);
+router.get('/export-orders', protect, admin, adminController.exportOrders);
 router.put('/product/:id/wholesale', protect, admin, adminController.updateProductWholesale);
 router.put('/order/:id/status', protect, admin, adminController.updateOrderState);
 router.post('/upload', protect, admin, upload.array('images', 5), adminController.uploadImages);

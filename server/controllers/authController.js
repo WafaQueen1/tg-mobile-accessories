@@ -2,6 +2,9 @@ const db = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const generateToken = (id, role) => {
     return jwt.sign({ id, role }, process.env.JWT_SECRET, {
@@ -71,7 +74,7 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Get default 'customer' role
-        const [roles] = await db.execute('SELECT id FROM roles WHERE name = "customer"');
+        const [roles] = await db.execute("SELECT id FROM roles WHERE name = 'customer'");
         const roleId = roles.length > 0 ? roles[0].id : 2;
 
         const [result] = await db.execute(
@@ -82,5 +85,64 @@ exports.register = async (req, res) => {
         res.status(201).json({ success: true, message: 'User registered successfully' });
     } catch (err) {
         res.status(500).json({ success: false, message: err.message });
+    }
+};
+
+exports.googleLogin = async (req, res) => {
+    try {
+        const { credential } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+        const payload = ticket.getPayload();
+        const { email, given_name, family_name, sub: google_id } = payload;
+
+        // Check if user exists
+        const [users] = await db.execute(`
+            SELECT u.*, r.name as role 
+            FROM users u
+            JOIN roles r ON u.role_id = r.id
+            WHERE u.email = $1
+        `, [email]);
+
+        let user;
+        if (users.length === 0) {
+            // Register new user
+            const [roles] = await db.execute("SELECT id FROM roles WHERE name = 'customer'");
+            const roleId = roles.length > 0 ? roles[0].id : 2;
+            
+            // For Google users, we don't have a password, so we use a random string
+            const randomPassword = Math.random().toString(36).slice(-8);
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(randomPassword, salt);
+
+            const [result] = await db.execute(
+                'INSERT INTO users (first_name, last_name, email, password_hash, role_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+                [given_name, family_name || '', email, hashedPassword, roleId]
+            );
+            
+            // Refetch to get role name
+            const [newUser] = await db.execute(`
+                SELECT u.*, r.name as role 
+                FROM users u
+                JOIN roles r ON u.role_id = r.id
+                WHERE u.id = $1
+            `, [result[0].id]);
+            user = newUser[0];
+        } else {
+            user = users[0];
+        }
+
+        const token = generateToken(user.id, user.role);
+        
+        res.json({
+            success: true,
+            user: { id: user.id, email: user.email, name: user.first_name, role: user.role },
+            token
+        });
+    } catch (err) {
+        console.error("Google Login Error:", err);
+        res.status(500).json({ success: false, message: 'Google authentication failed' });
     }
 };

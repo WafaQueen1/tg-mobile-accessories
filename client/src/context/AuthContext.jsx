@@ -10,12 +10,10 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                // Determine origin, use default backend port if local
                 const token = localStorage.getItem('token');
                 
                 if (token) {
                     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-                    // Attempt to fetch profile
                     const response = await axios.get('http://localhost:5000/api/auth/profile');
                     if (response.data.success) {
                         setUser(response.data.data);
@@ -44,17 +42,31 @@ export const AuthProvider = ({ children }) => {
         return false;
     };
 
+    const googleLogin = async (credential) => {
+        try {
+            const response = await axios.post('http://localhost:5000/api/auth/google-login', { credential });
+            if (response.data.success) {
+                localStorage.setItem('token', response.data.token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+                setUser(response.data.user);
+                return true;
+            }
+        } catch (error) {
+            console.error("Google login failed:", error);
+        }
+        return false;
+    };
+
     const logout = () => {
         localStorage.removeItem('token');
         delete axios.defaults.headers.common['Authorization'];
         setUser(null);
     };
 
-    // Helper check
-    const isAdmin = () => user && user.role_id === 1;
+    const isAdmin = () => user && user.role === 'admin';
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, logout, isAdmin }}>
+        <AuthContext.Provider value={{ user, loading, login, googleLogin, logout, isAdmin }}>
             {children}
         </AuthContext.Provider>
     );
